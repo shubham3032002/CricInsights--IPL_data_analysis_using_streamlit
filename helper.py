@@ -284,3 +284,202 @@ def calculate_team_performance(matches):
     team_performance_df[numeric_columns] += 1
 
     return team_performance_df
+
+
+
+#########################################player_performance####################################################
+
+def player_performance(data, selected_player):
+    # Batting Stats
+    batter_data = data[data['batter'] == selected_player]
+    matches_played = batter_data['match_id'].nunique()
+    total_runs = batter_data['batsman_runs'].sum()
+    total_balls_faced = batter_data['ball'].count()
+    average = round(total_runs / batter_data['is_wicket'].sum() if batter_data['is_wicket'].sum() > 0 else 0, 2)  # Batting average
+    strike_rate = round((total_runs / total_balls_faced) * 100 if total_balls_faced > 0 else 0, 2)  # Batting strike rate
+    
+    # Bowling Stats
+    bowler_data = data[data['bowler'] == selected_player]
+    total_wickets = bowler_data['is_wicket'].sum()  # Assuming 'is_wicket' indicates if the bowler took a wicket
+    total_balls_bowled = bowler_data['ball'].count()
+    bowling_average = round(bowler_data['batsman_runs'].sum() / total_wickets if total_wickets > 0 else 0, 2)  # Bowling average
+    economy_rate = round((bowler_data['batsman_runs'].sum() / total_balls_bowled) * 6 if total_balls_bowled > 0 else 0, 2)  # Economy rate
+
+    return {
+        'Matches_played': matches_played,
+        'Total_runs': total_runs,
+        'average': average,
+        'strike_rate': strike_rate,
+        'Total_wickets': total_wickets,
+        'bowling_average': bowling_average,
+        'economy_rate': economy_rate
+    }
+def player_performance_seasonwise(data, selected_player):
+    # Filter data for the selected player (both batting and bowling)
+    player_batting_data = data[data['batter'] == selected_player]
+    player_bowling_data = data[data['bowler'] == selected_player]
+    
+    # Group by 'season' and aggregate the batting performance stats
+    season_stats_batting = player_batting_data.groupby('season').agg(
+        total_runs=('batsman_runs', 'sum'),
+        total_balls_faced=('ball', 'count'),  # We need the total balls faced for strike rate calculation
+        total_matches_played=('match_id', 'nunique')  # Count the unique matches played
+    ).reset_index()
+
+    # Calculate strike rate (total runs / total balls faced) and round it to 2 decimal places
+    season_stats_batting['strike_rate'] = season_stats_batting.apply(
+        lambda x: round((x['total_runs'] / x['total_balls_faced']) * 100, 2) if x['total_balls_faced'] > 0 else 0, axis=1
+    )
+
+    # Group by 'season' and aggregate the bowling performance stats
+    season_stats_bowling = player_bowling_data.groupby('season').agg(
+        total_wickets=('is_wicket', 'sum'),
+        total_balls_bowled=('ball', 'count'),
+        total_runs_conceded=('batsman_runs', 'sum'),
+        total_matches_played=('match_id', 'nunique')  # Count the unique matches played in bowling data
+    ).reset_index()
+
+    # Calculate economy rate and round it to 2 decimal places
+    season_stats_bowling['economy_rate'] = season_stats_bowling.apply(
+        lambda x: round((x['total_runs_conceded'] / x['total_balls_bowled']) * 6, 2) if x['total_balls_bowled'] > 0 else 0, axis=1
+    )
+
+    # Merge both batting and bowling stats on 'season'
+    season_stats = pd.merge(season_stats_batting[['season', 'total_runs', 'strike_rate', 'total_matches_played']], 
+                             season_stats_bowling[['season', 'total_wickets', 'economy_rate', 'total_matches_played']], 
+                             on='season', how='outer')
+
+    # Ensure that the total matches played is the maximum value from both batting and bowling stats
+    season_stats['total_matches_played'] = season_stats[['total_matches_played_x', 'total_matches_played_y']].max(axis=1)
+    
+    # Drop the extra columns from the merge
+    season_stats = season_stats.drop(columns=['total_matches_played_x', 'total_matches_played_y'])
+
+    return season_stats
+
+
+
+#---------------------------------------venue--------------------------------------------------------------------------------------------
+
+
+def overall_venue(data,selected_venue):
+    
+       venue_data = data[data['venue'] == selected_venue]
+        # Total matches played at the selected venue
+       total_matches = venue_data['match_id'].nunique()
+       
+        # Success rate of batting first vs. chasing teams
+       # Success rate of batting first vs. chasing teams
+       batting_first_wins = venue_data[venue_data['result'] == 'runs']['match_id'].nunique()
+       chasing_wins = venue_data[venue_data['result'] == 'wickets']['match_id'].nunique()
+       
+       #calculate sucees rate
+       batting_first_succes_rate= round((batting_first_wins/total_matches)*100,2 )if total_matches >0  else 0 
+       chasing_success_rate = round((chasing_wins / total_matches) * 100, 2) if total_matches > 0 else 0  
+       
+       
+       
+       return total_matches, batting_first_succes_rate, chasing_success_rate 
+   
+def most_runs_and_wicket_venue(data, selected_venue):
+    # Filter data for the selected venue
+    venue_data = data[data['venue'] == selected_venue]
+
+    # Calculate total runs scored by each player
+    player_runs = (
+        venue_data.groupby('batter')['batsman_runs']
+        .sum()
+        .reset_index()
+        .sort_values(by='batsman_runs', ascending=False)
+        .head(5)
+        .reset_index(drop=True)  # Reset the index
+    )
+    player_runs.index += 1  # Start index from 1
+
+    # Calculate total wickets taken by each bowler
+    most_wickets = (
+        venue_data[venue_data['is_wicket'] == 1]
+        .groupby('bowler')
+        .size()
+        .reset_index(name='Wickets')
+        .sort_values(by='Wickets', ascending=False)
+        .head(5)
+        .reset_index(drop=True)  # Reset the index
+    )
+    most_wickets.index += 1  # Start index from 1
+
+    return player_runs, most_wickets
+
+def highest_scores(data, selected_venue):
+    # Filter data for the selected venue
+    venue_data = data[data['venue'] == selected_venue]
+    
+    # Group by venue, match_id, inning, batting_team, and bowling_team to calculate total runs
+    inning_scores = (
+        venue_data.groupby(['venue', 'match_id', 'inning', 'batting_team', 'bowling_team'])['total_runs']
+        .sum()
+        .reset_index()
+    )
+    
+    # Find the row with the highest score for the selected venue
+    highest_scores = (
+        inning_scores.loc[inning_scores.groupby('venue')['total_runs'].idxmax()]
+        .rename(columns={'total_runs': 'Highest_Score'})
+    )
+    
+    # Select the relevant columns
+    highest_scores = highest_scores[['venue', 'batting_team', 'bowling_team', 'Highest_Score']]
+    
+    # Extract data as lists
+    venues = highest_scores['venue'].tolist()
+    batting_teams = highest_scores['batting_team'].tolist()
+    bowling_teams = highest_scores['bowling_team'].tolist()
+    highest_scores_values = highest_scores['Highest_Score'].tolist()
+    
+    return venues, batting_teams, bowling_teams, highest_scores_values
+
+
+def lowest_scores(data, selected_venue):
+    # Filter data for the selected venue
+    venue_data = data[data['venue'] == selected_venue]
+    
+    # Group by venue, match_id, inning, batting_team, and bowling_team to calculate total runs
+    inning_scores = (
+        venue_data.groupby(['venue', 'match_id', 'inning', 'batting_team', 'bowling_team'])['total_runs']
+        .sum()
+        .reset_index()
+    )
+    
+    # Find the row with the lowest score for the selected venue
+    lowest_scores = (
+        inning_scores.loc[inning_scores.groupby('venue')['total_runs'].idxmin()]
+        .rename(columns={'total_runs': 'Lowest_Score'})
+    )
+    
+    # Select the relevant columns
+    lowest_scores = lowest_scores[['venue', 'batting_team', 'bowling_team', 'Lowest_Score']]
+    
+    # Extract data as lists
+    venues = lowest_scores['venue'].tolist()
+    batting_teams = lowest_scores['batting_team'].tolist()
+    bowling_teams = lowest_scores['bowling_team'].tolist()
+    lowest_scores_values = lowest_scores['Lowest_Score'].tolist()
+    
+    return venues, batting_teams, bowling_teams, lowest_scores_values 
+
+ 
+def score_intervals(data, selected_venue, bins=[0, 50, 100, 150, 200, 250, 300]):
+    venue_data = data[data['venue'] == selected_venue]
+    inning_scores = (
+        venue_data.groupby(['match_id', 'inning'])['total_runs']
+        .sum()
+        .reset_index()
+    )
+    interval_counts = pd.cut(inning_scores['total_runs'], bins=bins, right=False).value_counts().sort_index()
+    interval_df = interval_counts.reset_index()
+    interval_df.columns = ['Score Range', 'Frequency']
+    
+    # Convert Interval objects to "X to Y" format
+    interval_df['Score Range'] = interval_df['Score Range'].apply(lambda x: f"{x.left} to {x.right - 1}")
+    return interval_df
+
