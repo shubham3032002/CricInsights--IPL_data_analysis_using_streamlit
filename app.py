@@ -14,6 +14,18 @@ data=preprocessing.preprocessing()
 match_data=preprocessing.matches_data()
 
 # Adding IPL Logo and Title in Sidebar
+st.markdown(
+    """
+    <div style="background-color: #1a1a1a; padding: 20px; border-radius: 12px; text-align: center; box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.3);">
+        <h1 style="color: #ffffff; font-size: 34px; font-family: 'Arial', sans-serif; margin: 0;">Cric<span style="color: #ff6600;">Insights</span></h1>
+        <p style="color: #cccccc; font-size: 16px; font-family: 'Arial', sans-serif; margin-top: 8px;">Dive into IPL analytics with a modern twist</p>
+    </div>
+    """,
+    unsafe_allow_html=True
+)
+
+
+
 
 st.sidebar.markdown(
     """
@@ -25,8 +37,7 @@ st.sidebar.markdown(
 )
 
 
-
-
+st.sidebar.image('https://parimatchnews.com/wp-content/uploads/2020/10/2010-12.jpg')
 option = st.sidebar.radio(
     'Select an analysis type:',
     ['📊 Overview', '🚩 Team Performance', '🌟 Player Performance','🏏 Batter vs ⚾ Bowler', 'Venue Analysis']
