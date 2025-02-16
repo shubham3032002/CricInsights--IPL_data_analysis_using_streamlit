@@ -483,3 +483,74 @@ def score_intervals(data, selected_venue, bins=[0, 50, 100, 150, 200, 250, 300])
     interval_df['Score Range'] = interval_df['Score Range'].apply(lambda x: f"{x.left} to {x.right - 1}")
     return interval_df
 
+def most_won_match_on_venue(data,selected_venue):
+    
+    venue_data = data[data['venue'] == selected_venue]
+    
+    result = (
+    venue_data.groupby('winner')['match_id']
+    .nunique()
+    .reset_index()
+    .rename(columns={'match_id': 'Matches Won'})
+    .sort_values(by='Matches Won', ascending=False)
+    .reset_index(drop=True)
+    )
+
+    result.index += 1  # Start index from 1
+    return result
+
+####
+def highest_individual_score_venue(data,selected_venue):
+    venue_data=data[data['venue'] == selected_venue]
+    
+    batter_match_scores = venue_data.groupby(['match_id', 'batter', 'bowling_team','season'], as_index=False)['batsman_runs'].sum()
+    
+    highest_score = batter_match_scores.loc[batter_match_scores['batsman_runs'].idxmax()]
+    
+    return highest_score
+    
+def highest_individual_wicket_venue(data,selected_vanue):  
+    venue_data=data[data['venue'] == selected_vanue]
+    wickets_data = venue_data[venue_data['is_wicket']==1]
+   # Group by match_id, bowler, batting_team, and season, then count the number of wickets
+    bowler_match_wickets = wickets_data.groupby(['match_id', 'bowler', 'batting_team', 'season'], as_index=False).size()
+    
+    bowler_match_wickets.rename(columns={'size': 'wickets'},inplace =True)
+    # Find the record with the highest wickets
+    highest_wicket = bowler_match_wickets.loc[bowler_match_wickets['wickets'].idxmax()]
+    
+    return highest_wicket
+####################################################################################
+def batter_bowler_analysis(data, selected_batter, selected_bowler, selected_venue=None):
+    # Filter data for the selected batter and bowler
+    filtered_data = data[
+        (data['batter'] == selected_batter) &
+        (data['bowler'] == selected_bowler)
+    ]
+    if selected_venue:  # Filter by venue if specified
+        filtered_data = filtered_data[filtered_data['venue'] == selected_venue]
+
+    # Calculate metrics
+    total_runs = filtered_data['batsman_runs'].sum()
+    balls_faced = len(filtered_data)
+    strike_rate = (total_runs / balls_faced * 100) if balls_faced > 0 else 0
+    dismissals = filtered_data['is_wicket'].sum()
+    economy_rate = (filtered_data['total_runs'].sum() / (balls_faced / 6)) if balls_faced > 0 else 0
+
+    # Calculate boundaries: number of fours and sixes
+    total_fours = (filtered_data['batsman_runs'] == 4).sum()
+    total_sixes = (filtered_data['batsman_runs'] == 6).sum()
+
+    return {
+        'batter': selected_batter,
+        'bowler': selected_bowler,
+        'venue': selected_venue,
+        'total_runs': total_runs,
+        'balls_faced': balls_faced,
+        'strike_rate': round(strike_rate, 2),
+        'dismissals': dismissals,
+        'total_wickets': dismissals,  # Assuming dismissals equals wickets taken by the bowler
+        'economy_rate': round(economy_rate, 2),
+        'fours': total_fours,
+        'sixes': total_sixes
+    }

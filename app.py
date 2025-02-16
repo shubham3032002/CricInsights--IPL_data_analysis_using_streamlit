@@ -13,14 +13,26 @@ import plotly.graph_objects as go
 data=preprocessing.preprocessing()
 match_data=preprocessing.matches_data()
 
-st.sidebar.title("IPL Data Analysis")
+# Adding IPL Logo and Title in Sidebar
+
+st.sidebar.markdown(
+    """
+    <div style="text-align: center; padding: 10px;">
+        <h1 style="color: white; font-size: 24px; margin-top: 10px;">IPL Data Analysis</h1>
+    </div>
+    """,
+    unsafe_allow_html=True
+)
+
+
+
 
 option = st.sidebar.radio(
     'Select an analysis type:',
-    ['Overview', 'Team Performance', 'Player Performance','🏏 Batter vs ⚾ Bowler', 'Venue Analysis']
+    ['📊 Overview', '🚩 Team Performance', '🌟 Player Performance','🏏 Batter vs ⚾ Bowler', 'Venue Analysis']
 )
 
-if option == 'Overview':
+if option == '📊 Overview':
     st.title('Yearwise Champion')
     
     # Call the helper function to get yearwise champions
@@ -114,7 +126,7 @@ if option == 'Overview':
     
     
     
-if option == "Team Performance":
+if option == "🚩 Team Performance":
     # Title for Team Performance
     st.markdown('### Total Matches Played and Wins by Each Team')
 
@@ -241,7 +253,7 @@ if option == "Team Performance":
         st.dataframe(performance_data, use_container_width=True)
         
         
-if option == "Player Performance":
+if option == "🌟 Player Performance":
     st.markdown("### Player statistics")
     list_of_the_players= ['A Ashish Reddy', 'A Badoni', 'A Chandila', 'A Chopra',
        'A Choudhary', 'A Dananjaya', 'A Flintoff', 'A Kamboj', 'A Kumble',
@@ -490,10 +502,7 @@ if option == "Player Performance":
     # Display the graph
     st.plotly_chart(fig)
     
-else:
-    st.write("No players found matching your search.")
-
-
+    
 
 #-----------------------------------------------------------------venue analysis-----------------------------------------------------
 if option == "Venue Analysis":
@@ -525,41 +534,48 @@ if option == "Venue Analysis":
     st.subheader(f"Top 5 Wicket-Takers at {selected_venue}")
     st.dataframe(top_baller, use_container_width=True)
     
-    st.subheader(f"Highest Score at {selected_venue}")
+#---------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-# Call the helper function to get results
-    venues, batting_teams, bowling_teams, highest_scores_values = helper.highest_scores(data, selected_venue)
 
-# Create columns to display the data in a centered format
-    col1, col2, col3 = st.columns([1, 2, 1])
+    tabs = st.tabs(["Highest Score", "Lowest Score"])
 
- 
-    with col2:
-       st.markdown(f"<h3 style='text-align: center; color: #4CAF50;'>Batting Team</h3>", unsafe_allow_html=True)
-       st.markdown(f"<p style='text-align: center; font-size: 20px; font-weight: bold;'>{batting_teams[0]}</p>", unsafe_allow_html=True)
+    with tabs[0]:
+       st.header(f"Highest  Score at {selected_venue}")
+    # Get highest score details from the helper function
+       venues_hs, batting_teams, bowling_teams, highest_scores_values = helper.highest_scores(data, selected_venue)
     
-       st.markdown(f"<h3 style='text-align: center; color: #FF5722;'>Bowling Team</h3>", unsafe_allow_html=True)
-       st.markdown(f"<p style='text-align: center; font-size: 20px; font-weight: bold;'>{bowling_teams[0]}</p>", unsafe_allow_html=True)
+    # Display the details in centered columns
+       col1, col2, col3 = st.columns([1, 2, 1])
+       with col2:
+        st.markdown("<h3 style='text-align: center; color: #4CAF50;'>Batting Team</h3>", unsafe_allow_html=True)
+        st.markdown("<p style='text-align: center; font-size: 20px; font-weight: bold;'>{}</p>".format(batting_teams[0]), unsafe_allow_html=True)
+        
+        st.markdown("<h3 style='text-align: center; color: #FF5722;'>Bowling Team</h3>", unsafe_allow_html=True)
+        st.markdown("<p style='text-align: center; font-size: 20px; font-weight: bold;'>{}</p>".format(bowling_teams[0]), unsafe_allow_html=True)
+        
+        st.markdown("<h3 style='text-align: center; color: #2196F3;'>Highest Score</h3>", unsafe_allow_html=True)
+        st.markdown("<p style='text-align: center; font-size: 20px; font-weight: bold;'>{}</p>".format(highest_scores_values[0]), unsafe_allow_html=True)
     
-       st.markdown(f"<h3 style='text-align: center; color: #2196F3;'>Highest Score</h3>", unsafe_allow_html=True)
-       st.markdown(f"<p style='text-align: center; font-size: 20px; font-weight: bold;'>{highest_scores_values[0]}</p>", unsafe_allow_html=True)
- 
- 
-    st.subheader(f"lowest Score at {selected_venue}")
-    venues, batting_teams, bowling_teams, lowest_scores_values = helper.lowest_scores(data, selected_venue)
-    col1, col2, col3 = st.columns([1, 2, 1])
+        st.write(f"Highest Individual Score at {selected_venue}: {batting_teams[0]} scored {highest_scores_values[0]} runs against {bowling_teams[0]}.")
 
- 
-    with col2:
-       st.markdown(f"<h3 style='text-align: center; color: #4CAF50;'>Batting Team</h3>", unsafe_allow_html=True)
-       st.markdown(f"<p style='text-align: center; font-size: 20px; font-weight: bold;'>{batting_teams[0]}</p>", unsafe_allow_html=True)
+       with tabs[1]:
+        st.header(f"Lowest Score at {selected_venue}")
+        # Get lowest score details from the helper function
+        venues_ls, batting_teams_ls, bowling_teams_ls, lowest_scores_values = helper.lowest_scores(data, selected_venue)
     
-       st.markdown(f"<h3 style='text-align: center; color: #FF5722;'>Bowling Team</h3>", unsafe_allow_html=True)
-       st.markdown(f"<p style='text-align: center; font-size: 20px; font-weight: bold;'>{bowling_teams[0]}</p>", unsafe_allow_html=True)
+    # Display the details in centered columns
+        col1, col2, col3 = st.columns([1, 2, 1])
+        with col2:
+          st.markdown("<h3 style='text-align: center; color: #4CAF50;'>Batting Team</h3>", unsafe_allow_html=True)
+          st.markdown("<p style='text-align: center; font-size: 20px; font-weight: bold;'>{}</p>".format(batting_teams_ls[0]), unsafe_allow_html=True)
+        
+          st.markdown("<h3 style='text-align: center; color: #FF5722;'>Bowling Team</h3>", unsafe_allow_html=True)
+          st.markdown("<p style='text-align: center; font-size: 20px; font-weight: bold;'>{}</p>".format(bowling_teams_ls[0]), unsafe_allow_html=True)
+        
+          st.markdown("<h3 style='text-align: center; color: #2196F3;'>Lowest Score</h3>", unsafe_allow_html=True)
+          st.markdown("<p style='text-align: center; font-size: 20px; font-weight: bold;'>{}</p>".format(lowest_scores_values[0]), unsafe_allow_html=True)
     
-       st.markdown(f"<h3 style='text-align: center; color: #2196F3;'>lowest Score</h3>", unsafe_allow_html=True)
-       st.markdown(f"<p style='text-align: center; font-size: 20px; font-weight: bold;'>{lowest_scores_values [0]}</p>", unsafe_allow_html=True)
- 
+          st.write(f"Lowest Score at {selected_venue}: {batting_teams_ls[0]} scored {lowest_scores_values[0]} runs against {bowling_teams_ls[0]}.")
  #------------------------------------------------------------------------------------------------------------------------------------------------
     st.title("🏏 IPL Venue Analysis - Score Intervals")
 
@@ -586,3 +602,106 @@ if option == "Venue Analysis":
 
     # Display the chart
     st.pyplot(fig)
+    
+    
+    team_wins_venue=helper.most_won_match_on_venue(data,selected_venue)
+    
+    st.markdown(f"<h3 style='text-align: center; color: #4CAF50;'>Matches Won by Teams at {selected_venue}</h3>", unsafe_allow_html=True)
+    # Display as a table
+    st.table(team_wins_venue)
+
+    # Visualize with Matplotlib
+    fig, ax = plt.subplots(figsize=(8, 4))
+    ax.barh(team_wins_venue['winner'], team_wins_venue['Matches Won'], color='#1f77b4', edgecolor='black')
+    ax.set_title(f"Matches Won by Teams at {selected_venue}", fontsize=16, color='#333')
+    ax.set_xlabel("Matches Won", fontsize=12)
+    ax.set_ylabel("Teams", fontsize=12)
+    plt.tight_layout()
+
+    # Display the chart
+    st.pyplot(fig)
+    
+    
+
+    # Get highest individual score details for the selected venue
+    highest_score = helper.highest_individual_score_venue(data, selected_venue)
+    highest_wickets = helper.highest_individual_wicket_venue(data, selected_venue)
+
+    # Display Highest Individual Score interactively
+    st.header("Show Highest Individual Score")
+    with st.expander("Click to view highest individual score details"):
+        st.write(f"**Batter:** {highest_score['batter']}")
+        st.write(f"**Runs Scored:** {highest_score['batsman_runs']}")
+        st.write(f"**Bowling Team:** {highest_score['bowling_team']}")
+        st.write(f"**Season:** {highest_score['season']}")
+        st.write(f"Highest Individual Score at {selected_venue}: {highest_score['batter']} scored {highest_score['batsman_runs']} runs against {highest_score['bowling_team']} in the {highest_score['season']} season.")
+
+    # Display Best Bowling Performance interactively
+    st.header("Show Best Bowling Performance")
+    with st.expander("Click to view best bowling performance details"):
+        st.write(f"**Bowler:** {highest_wickets['bowler']}")
+        st.write(f"**Wickets Taken:** {highest_wickets['wickets']}")
+        st.write(f"**Against Team:** {highest_wickets['batting_team']}")
+        st.write(f"**Season:** {highest_wickets['season']}")
+        st.write(f"Best Bowling Performance at {selected_venue}: {highest_wickets['bowler']} took {highest_wickets['wickets']} wickets against {highest_wickets['batting_team']} in the {highest_wickets['season']} season.")
+    
+    
+    
+####################################################batter_vs_bolwer##################################################################################################################################################################    
+
+if option == '🏏 Batter vs ⚾ Bowler':
+    st.subheader('🏏 Batter vs ⚾ Bowler')
+    st.title("🏏 Batter vs Bowler Analysis")
+    st.subheader("🎯 Interactive Cricket Insights")
+
+    # Dropdowns for user input
+    selected_batter = st.selectbox("Select Batter", data['batter'].unique())
+    selected_bowler = st.selectbox("Select Bowler", data['bowler'].unique())
+    selected_venue = st.selectbox("Select Venue (Optional)", ['All Venues'] + list(data['venue'].unique()))
+
+    # Call the analysis function from helper module
+    result = helper.batter_bowler_analysis(
+        data=data,
+        selected_batter=selected_batter,
+        selected_bowler=selected_bowler,
+        selected_venue=None if selected_venue == 'All Venues' else selected_venue
+    )
+
+    # Display analysis results in a structured format
+    if result['total_runs'] > 0:
+        # Display batter and bowler info
+        st.markdown(f"### 🏏 Batter: **{result['batter']}**")
+        st.markdown(f"### ⚾ Bowler: **{result['bowler']}**")
+        if result['venue']:
+            st.markdown(f"### 🏟 Venue: **{result['venue']}**")
+
+        # Use columns to separate batter and bowler stats
+        col1, col2 = st.columns(2)
+        with col1:
+            st.markdown("### Batter's Performance")
+            st.write(f"**Total Runs Scored:** {result['total_runs']} 🏆")
+            st.write(f"**Balls Faced:** {result['balls_faced']} ⚾")
+            st.write(f"**Strike Rate:** {result['strike_rate']} 🚀")
+            st.write(f"**Fours:** {result['fours']} 🔥")
+            st.write(f"**Sixes:** {result['sixes']} 💥")
+            st.write(f"**Dismissals:** {result['dismissals']} ❌")
+        with col2:
+            st.markdown("### Bowler's Performance")
+            st.write(f"**Total Wickets Taken:** {result['total_wickets']} 🎯")
+            st.write(f"**Economy Rate:** {result['economy_rate']} 💸")
+
+        # Detailed summary
+        st.info(
+            f"""
+            **Summary**:  
+            {result['batter']} scored **{result['total_runs']} runs** against {result['bowler']} 
+            in **{result['balls_faced']} balls** with a **strike rate of {result['strike_rate']}**.  
+            Additionally, {result['batter']} hit **{result['fours']} fours** and **{result['sixes']} sixes**.  
+            The bowler dismissed the batter **{result['dismissals']} times** and had an **economy rate of {result['economy_rate']}**.
+            """
+        )
+    else:
+        st.warning(f"No data available for {result['batter']} against {result['bowler']} at {result['venue'] if result['venue'] else 'all venues'}.")
+
+    st.markdown("---")
+    st.caption("Powered by 🏏 Cricket Analytics")
