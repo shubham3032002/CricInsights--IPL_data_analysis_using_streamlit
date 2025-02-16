@@ -2,6 +2,8 @@
 Welcome to the IPL Data Analysis App! This app is designed to provide insightful visualizations and analyses of IPL (Indian Premier League) data. Built using Streamlit, it allows users to explore key statistics, trends, and performance metrics for teams and players in the IPL.
 
 
+#### 🌐 Website Link
+Visit the app here:  https://cricinsights.streamlit.app/
 #### 🚀 Features
 - **📊 Interactive Dashboards:** Explore team and player performance using interactive charts and tables.
 - **📅 Year-Wise Analysis:** Compare performances across different IPL seasons.
